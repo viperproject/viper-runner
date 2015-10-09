@@ -14,7 +14,7 @@ def print_header():
     print()
 
 
-parser = argparse.ArgumentParser(description='Viper tool chain analysis script.')
+parser = argparse.ArgumentParser(description='Viper tool chain runner.')
 parser.add_argument('config_file', help='the configuration file for this script.')
 args = parser.parse_args()
 print_header()

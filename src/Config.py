@@ -1,19 +1,7 @@
 import os
-import datetime
+from src.util import replace_placeholders, CURR_DATE
 
 __author__ = 'froth'
-
-
-PLACEHOLDER_DATE = "@date@"
-PLACEHOLDER_FILE = "@file@"
-PLACEHOLDER_REP = "@rep@"
-CURR_DATE = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
-
-
-def replace_placeholders(string, file_name=PLACEHOLDER_FILE, repetition=PLACEHOLDER_REP, date=CURR_DATE):
-    return string.replace(PLACEHOLDER_DATE, date)\
-                 .replace(PLACEHOLDER_FILE, file_name)\
-                 .replace(PLACEHOLDER_REP, str(repetition))
 
 
 class Config:
@@ -28,22 +16,25 @@ class Config:
         """
         self.testFolder = "../silver/src/test/resources/all"
         self.run_configurations = [["../carbon/carbon.bat"]]
+        self.run_config_names = ["Default"]
         self.ignoreList = []
         self.timeout = 60  # seconds
         self.repetitions = 5
         self.list_files = False
         self.timing_csv_file_name = "timings.txt"
         self.print_output = False
+        self.output_file_name = ""
 
     def print(self):
         print()
         print("Configuration:")
         print("    Run configurations: " + str(self.run_configurations))
+        print("    Run configuration names: " + str(self.run_config_names))
         print("    Test folder: " + self.testFolder)
         print("    Ignored tests: " + str(self.ignoreList))
         print("    Timeout: " + str(self.timeout) + " seconds")
         print("    Test repetitions: " + str(self.repetitions))
-        print("    CSV file with timings: " + str(os.path.join(os.getcwd(), self.timing_csv_file_name)))
+        print("    CSV file with timings: " + self.timing_csv_file_name)
         print("    Print process output: " + str(self.print_output))
         print()
 
@@ -73,8 +64,10 @@ class Config:
                         if run_config_override:
                             run_config_override = False
                             self.run_configurations = []
+                            self.run_config_names = []
                         curr_conf = [os.path.normpath(line_splits.pop())]
                         self.run_configurations.append(curr_conf)
+                        self.run_config_names.append("run_config_" + str(len(self.run_configurations)))
                     elif opt == "ignore":
                         # normalize path separators, so that filtering works correctly
                         self.ignoreList.append(os.path.normpath(line_splits.pop()))
@@ -95,10 +88,17 @@ class Config:
                         arg = line_splits.pop().split(" ", maxsplit=1)
                         idx = len(self.run_configurations)
                         self.run_configurations[idx - 1].extend(arg)
+                    elif opt == "config_name":
+                        # parse argument and add it to the last mentioned run_configuration.
+                        config_name = line_splits.pop()
+                        idx = len(self.run_configurations)
+                        self.run_config_names[idx - 1] = config_name
                     elif opt == "timing_csv":
-                        self.timing_csv_file_name = line_splits.pop().replace(PLACEHOLDER_DATE, CURR_DATE)
+                        self.timing_csv_file_name = replace_placeholders(line_splits.pop())
                     elif opt == "print_process_output":
                         self.print_output = parse_bool(line_splits.pop())
+                    elif opt == "output_file":
+                        self.output_file_name = line_splits.pop()
                     else:
                         print("Skipping unknown configuration option '" + opt + "'.")
 

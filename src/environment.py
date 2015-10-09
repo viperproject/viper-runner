@@ -27,8 +27,8 @@ class Environment:
 
     def init_env(self, config_file):
         self.config.read_config_file(config_file)
-        self.file_writer = FileWriter(self.config.timing_csv_file_name)
-        self.file_writer.init_csv_timings()
+        self.file_writer = FileWriter()
+        self.file_writer.init_output_file(self.config.timing_csv_file_name, print_header=True)
 
     def finalize(self):
         self.file_writer.finalize()
@@ -62,7 +62,7 @@ class Environment:
         :return:
         """
         for file in self.files:
-            for run_config in self.config.run_configurations:
-                runner = ProcessRunner(run_config, file, self.config)
+            for run_config, config_name in zip(self.config.run_configurations, self.config.run_config_names):
+                runner = ProcessRunner(run_config, file, config_name, self.config)
                 timings = runner.run()
-                self.file_writer.add_timing_entry(timings, file, run_config)
+                self.file_writer.add_timing_entry(timings, file, config_name)
