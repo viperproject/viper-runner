@@ -23,7 +23,8 @@ class Config:
         self.list_files = False
         self.timing_csv_file_name = "timings.txt"
         self.print_output = False
-        self.output_file_name = ""
+        self.stdout_file_name = ""
+        self.stderr_file_name = ""
 
     def print(self):
         print()
@@ -97,8 +98,10 @@ class Config:
                         self.timing_csv_file_name = replace_placeholders(line_splits.pop())
                     elif opt == "print_process_output":
                         self.print_output = parse_bool(line_splits.pop())
-                    elif opt == "output_file":
-                        self.output_file_name = line_splits.pop()
+                    elif opt == "stdout_file":
+                        self.stdout_file_name = line_splits.pop()
+                    elif opt == "stderr_file":
+                        self.stderr_file_name = line_splits.pop()
                     else:
                         print("Skipping unknown configuration option '" + opt + "'.")
 

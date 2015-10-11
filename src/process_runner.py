@@ -63,19 +63,36 @@ class ProcessRunner:
         return end - start
 
     def run_with_output(self, cmd, file, repetition):
-        if self.config.output_file_name:
-            # write stdout of subprocess to file
-            curr_file_name = replace_placeholders(self.config.output_file_name, file=file, repetition=repetition,
-                                                  config_name=self.config_name)
+        start = -1
+        if self.config.stdout_file_name:
+            # generate file names for output files.
+            curr_stdout_file_name = replace_placeholders(self.config.stdout_file_name,
+                                                         file=file,
+                                                         repetition=repetition,
+                                                         config_name=self.config_name)
+            curr_stderr_file_name = replace_placeholders(self.config.stderr_file_name,
+                                                         file=file,
+                                                         repetition=repetition,
+                                                         config_name=self.config_name)
             try:
-                if not os.path.exists(os.path.dirname(curr_file_name)):
-                    os.makedirs(os.path.dirname(curr_file_name))
-                start = time.perf_counter()
-                with open(curr_file_name, "w+") as f:
-                    subprocess.call(cmd, stdout=f, stderr=subprocess.STDOUT, timeout=self.config.timeout)
-                #  output = subprocess.check_output(cmd, timeout=self.config.timeout, universal_newlines=True)
+                stderr_output = subprocess.STDOUT
+                # generate files / folders, if not existing
+                if not os.path.exists(os.path.dirname(curr_stdout_file_name)):
+                    os.makedirs(os.path.dirname(curr_stdout_file_name))
+                if curr_stderr_file_name and not os.path.exists(os.path.dirname(curr_stderr_file_name)):
+                    os.makedirs(os.path.dirname(curr_stderr_file_name))
+
+                with open(curr_stdout_file_name, "w+") as stdout_file, open(curr_stderr_file_name, "w+") as stderr_file:
+                    if self.config.stderr_file_name:
+                        stderr_output = stderr_file
+
+                    start = time.perf_counter()
+                    subprocess.call(cmd,
+                                    stdout=stdout_file,
+                                    stderr=stderr_output,
+                                    timeout=self.config.timeout)
             except IOError:
-                print("Unable to open file '" + curr_file_name + "'. Aborting.")
+                print("Unable to open output file. Aborting.")
             finally:
                 end = time.perf_counter()
         else:
