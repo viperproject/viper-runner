@@ -19,7 +19,7 @@ class FileWriter:
         try:
             if not os.path.exists(os.path.dirname(filename)):
                 os.makedirs(os.path.dirname(filename))
-            self.file = open(os.path.join(os.getcwd(), filename), "w+")
+            self.file = open(filename, "w+")
             if print_header:
                 print(self.csv_header, file=self.file)
         except IOError:

@@ -108,7 +108,7 @@ class Config:
 
 
 def parse_bool(val):
-    if val == "False":
+    if val == "False" or val == "0":
         return False
     else:
         return bool(val)

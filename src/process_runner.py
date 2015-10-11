@@ -1,6 +1,7 @@
 import subprocess
 import time
-from src.filewriter import FileWriter
+import datetime
+import os
 
 from src.util import replace_placeholders
 
@@ -25,8 +26,10 @@ class ProcessRunner:
             # replace placeholders in command
             concrete_command = [replace_placeholders(cmd, file=self.file, repetition=i, config_name=self.config_name)
                                 for cmd in self.command]
-            print("Running '" + " ".join(concrete_command) + "' repetition " +
+
+            print(datetime.datetime.now().strftime("%d.%m.%Y, %H:%M:%S") + ": running next job, repetition " +
                   str(i + 1) + " of " + str(self.config.repetitions) + "...")
+            print("Command: '" + " ".join(concrete_command))
 
             try:
                 if self.config.print_output:
@@ -44,6 +47,7 @@ class ProcessRunner:
                 print("Process failed with nonzero exit code!")
 
             timings.append((elapsed, exit_condition))
+            print()
             print("Time elapsed: " + "{:.3f}".format(elapsed) + " seconds")
             print()
         return timings
@@ -61,30 +65,19 @@ class ProcessRunner:
     def run_with_output(self, cmd, file, repetition):
         if self.config.output_file_name:
             # write stdout of subprocess to file
-            filewriter = FileWriter()
             curr_file_name = replace_placeholders(self.config.output_file_name, file=file, repetition=repetition,
                                                   config_name=self.config_name)
-            filewriter.init_output_file(curr_file_name)
-            start = time.perf_counter()
-            process = subprocess.run(cmd,
-                                     check=True,
-                                     stdout=subprocess.PIPE,
-                                     stderr=subprocess.PIPE,
-                                     timeout=self.config.timeout)
-            end = time.perf_counter()
-
-            # write contents to file
-            filewriter.write_line("")
-            filewriter.write_line("Stdout:")
-            filewriter.write_line("")
-            for content in process.stdout.decode("utf-8"):
-                filewriter.write_raw(content)
-            filewriter.write_line("")
-            filewriter.write_line("Stderr:")
-            filewriter.write_line("")
-            for content in process.stderr.decode("utf-8"):
-                filewriter.write_raw(content)
-            filewriter.finalize()
+            try:
+                if not os.path.exists(os.path.dirname(curr_file_name)):
+                    os.makedirs(os.path.dirname(curr_file_name))
+                start = time.perf_counter()
+                with open(curr_file_name, "w+") as f:
+                    subprocess.call(cmd, stdout=f, stderr=subprocess.STDOUT, timeout=self.config.timeout)
+                #  output = subprocess.check_output(cmd, timeout=self.config.timeout, universal_newlines=True)
+            except IOError:
+                print("Unable to open file '" + curr_file_name + "'. Aborting.")
+            finally:
+                end = time.perf_counter()
         else:
             start = time.perf_counter()
             subprocess.run(cmd,
