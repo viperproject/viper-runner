@@ -1,5 +1,5 @@
-# Viper Runner
-==============
+Viper Runner
+============
 
 Helper script for the Viper tool chain.
 Runs tests, measures time and kills processes that take too long (including their children).
@@ -9,4 +9,4 @@ Some configuration presets are available in the configs folder.
 
 Dependencies:
 -------------
-- psutils
+- psutil
