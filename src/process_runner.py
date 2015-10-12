@@ -2,6 +2,7 @@ import subprocess
 import time
 import datetime
 import os
+import psutil
 
 from src.util import replace_placeholders
 
@@ -31,20 +32,7 @@ class ProcessRunner:
                   str(i + 1) + " of " + str(self.config.repetitions) + "...")
             print("Command: '" + " ".join(concrete_command))
 
-            try:
-                if self.config.print_output:
-                    elapsed = self.run_with_output(concrete_command, self.file, i)
-                else:
-                    elapsed = self.run_without_output(concrete_command)
-                exit_condition = "0"
-            except subprocess.TimeoutExpired:
-                exit_condition = "timeout"
-                elapsed = self.config.timeout
-                print("Process was killed due to timeout!")
-            except subprocess.CalledProcessError as err:
-                exit_condition = str(err.returncode)
-                elapsed = -1
-                print("Process failed with nonzero exit code!")
+            elapsed, exit_condition = self.run_process(concrete_command, self.file, i)
 
             timings.append((elapsed, exit_condition))
             print()
@@ -52,53 +40,61 @@ class ProcessRunner:
             print()
         return timings
 
-    def run_without_output(self, cmd):
-        start = time.perf_counter()
-        subprocess.run(cmd,
-                       check=True,
-                       stdout=subprocess.DEVNULL,
-                       stderr=subprocess.DEVNULL,
-                       timeout=self.config.timeout)
-        end = time.perf_counter()
-        return end - start
+    def run_process(self, cmd, file, repetition):
+        stdout_output, stderr_output = self.get_process_output(file, repetition)
 
-    def run_with_output(self, cmd, file, repetition):
-        start = -1
-        if self.config.stdout_file_name:
-            # generate file names for output files.
-            curr_stdout_file_name = replace_placeholders(self.config.stdout_file_name,
-                                                         file=file,
-                                                         repetition=repetition,
-                                                         config_name=self.config_name)
-            curr_stderr_file_name = replace_placeholders(self.config.stderr_file_name,
-                                                         file=file,
-                                                         repetition=repetition,
-                                                         config_name=self.config_name)
-            try:
-                stderr_output = subprocess.STDOUT
-                # generate files / folders, if not existing
+        # run the actual process
+        start = time.perf_counter()
+        process = subprocess.Popen(cmd, stdout=stdout_output, stderr=stderr_output)
+        try:
+            exit_condition = process.wait(timeout=self.config.timeout)
+        except subprocess.TimeoutExpired:
+            exit_condition = "timeout"
+            # kill process and all its children
+            parent = psutil.Process(process.pid)
+            for child in parent.children(recursive=True):
+                child.kill()
+            parent.kill()
+            print("Process was killed due to timeout!")
+        finally:
+            end = time.perf_counter()
+
+            # close files again, if they were opened
+            if self.config.stdout_file_name:
+                stdout_output.close()
+            if self.config.stderr_file_name:
+                stderr_output.close()
+        return end - start, str(exit_condition)
+
+    def get_process_output(self, file, repetition):
+        # generate file names for output files.
+        curr_stdout_file_name = replace_placeholders(self.config.stdout_file_name,
+                                                     file=file,
+                                                     repetition=repetition,
+                                                     config_name=self.config_name)
+        curr_stderr_file_name = replace_placeholders(self.config.stderr_file_name,
+                                                     file=file,
+                                                     repetition=repetition,
+                                                     config_name=self.config_name)
+        if self.config.print_output:
+            stdout_output = None
+            stderr_output = None
+        else:
+            stdout_output = subprocess.DEVNULL
+            stderr_output = subprocess.DEVNULL
+        try:
+            # generate files / folders, if not existing
+            if curr_stdout_file_name:
                 if not os.path.exists(os.path.dirname(curr_stdout_file_name)):
                     os.makedirs(os.path.dirname(curr_stdout_file_name))
-                if curr_stderr_file_name and not os.path.exists(os.path.dirname(curr_stderr_file_name)):
+                stdout_output = open(curr_stdout_file_name, "w+")
+
+            if curr_stderr_file_name:
+                if not os.path.exists(os.path.dirname(curr_stderr_file_name)):
                     os.makedirs(os.path.dirname(curr_stderr_file_name))
-
-                with open(curr_stdout_file_name, "w+") as stdout_file, open(curr_stderr_file_name, "w+") as stderr_file:
-                    if self.config.stderr_file_name:
-                        stderr_output = stderr_file
-
-                    start = time.perf_counter()
-                    subprocess.call(cmd,
-                                    stdout=stdout_file,
-                                    stderr=stderr_output,
-                                    timeout=self.config.timeout)
-            except IOError:
-                print("Unable to open output file. Aborting.")
-            finally:
-                end = time.perf_counter()
-        else:
-            start = time.perf_counter()
-            subprocess.run(cmd,
-                           check=True,
-                           timeout=self.config.timeout)
-            end = time.perf_counter()
-        return end - start
+                stderr_output = open(curr_stderr_file_name, "w+")
+        except IOError as err:
+            print("Unable to open output file. Aborting.")
+            print(err)
+            exit(-1)
+        return stdout_output, stderr_output
