@@ -11,4 +11,7 @@ class ResultAnalyzer:
         self.config = config
 
     def print_summary(self):
-        print("Collected " + str(len(self.results.file_to_result.values)) + " data points.")
+        n_results = 0
+        for res in self.results.values():
+            n_results += len(res.file_to_result.values())
+        print("Collected " + str(n_results) + " data points.")

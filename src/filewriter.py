@@ -26,13 +26,13 @@ class FileWriter:
             print("Unable to open file '" + filename + "'. Aborting.")
             exit(-1)
 
-    def add_timing_entry(self, timings):
+    def add_timing_entry(self, config_name,  timings):
         try:
             for result in timings:
                 # writes all the timing triplets (timing, file, command)
                 line = ", ".join([str(result.time_elapsed),
                                   result.input_file,
-                                  result.config_name,
+                                  config_name,
                                   str(result.return_code),
                                   str(result.timeout_occurred)])
                 print(line, file=self.file, flush=True)

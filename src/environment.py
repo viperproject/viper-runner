@@ -3,6 +3,7 @@ from src.process_runner import ProcessRunner
 from src.config import Config
 from src.filewriter import FileWriter
 from src.result import RunResult
+from src.result_analyzer import ResultAnalyzer
 
 __author__ = 'froth'
 
@@ -19,6 +20,7 @@ class Environment:
         self.files = []
         self.file_writer = None
         self.results = {}
+        self.analyzer = None
 
     def exec(self, config_file_name):
         self.init_env(config_file_name)
@@ -38,6 +40,10 @@ class Environment:
 
     def finalize(self):
         self.file_writer.finalize()
+
+    def analyze(self):
+        self.analyzer = ResultAnalyzer(self.results, self.config)
+        self.analyzer.print_summary()
 
     def print_info(self):
         self.config.print()
@@ -72,4 +78,4 @@ class Environment:
                 runner = ProcessRunner(run_config, file, config_name, self.config)
                 timings = runner.run()
                 self.results[config_name].add_results(timings)
-                self.file_writer.add_timing_entry(timings)
+                self.file_writer.add_timing_entry(config_name, timings)

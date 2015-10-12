@@ -53,11 +53,15 @@ class ProcessRunner:
         except subprocess.TimeoutExpired:
             result.timeout_occurred = True
             # kill process and all its children
-            parent = psutil.Process(process.pid)
-            for child in parent.children(recursive=True):
-                child.kill()
-            parent.kill()
-            print("Process was killed due to timeout!")
+            try:
+                parent = psutil.Process(process.pid)
+                for child in parent.children(recursive=True):
+                    child.kill()
+                parent.kill()
+                print("Process was killed due to timeout!")
+            except psutil.NoSuchProcess:
+                # ignore this exception. This just means that this process barely made it.
+                pass
         finally:
             end = time.perf_counter()
 

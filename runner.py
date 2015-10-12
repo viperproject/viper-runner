@@ -14,9 +14,10 @@ def print_header():
     print()
 
 
+print_header()
 parser = argparse.ArgumentParser(description='Viper tool chain runner.')
 parser.add_argument('config_file', help='the configuration file for this script.')
 args = parser.parse_args()
-print_header()
 env = Environment()
 env.exec(args.config_file)
+env.analyze()
