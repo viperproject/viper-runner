@@ -87,8 +87,12 @@ class Config:
                     elif opt == "config_name":
                         # parse argument and add it to the last mentioned run_configuration.
                         config_name = line_splits.pop()
-                        idx = len(self.run_configurations)
-                        self.run_config_names[idx - 1] = config_name
+                        if config_name in self.run_config_names:
+                            print("Error: Configuration name '" +
+                                  config_name + "' is not unique. Default name will be kept.")
+                        else:
+                            idx = len(self.run_configurations)
+                            self.run_config_names[idx - 1] = config_name
                     elif opt == "timing_csv":
                         self.timing_csv_file_name = replace_placeholders(line_splits.pop())
                     elif opt == "print_process_output":

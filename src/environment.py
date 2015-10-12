@@ -2,6 +2,7 @@ import os
 from src.process_runner import ProcessRunner
 from src.config import Config
 from src.filewriter import FileWriter
+from src.result import RunResult
 
 __author__ = 'froth'
 
@@ -17,6 +18,7 @@ class Environment:
         self.config = Config()
         self.files = []
         self.file_writer = None
+        self.results = {}
 
     def exec(self, config_file_name):
         self.init_env(config_file_name)
@@ -29,6 +31,10 @@ class Environment:
         self.config.read_config_file(config_file)
         self.file_writer = FileWriter()
         self.file_writer.init_output_file(self.config.timing_csv_file_name, print_header=True)
+
+        # initialize result collection.
+        for name in self.config.run_config_names:
+            self.results[name] = RunResult(name)
 
     def finalize(self):
         self.file_writer.finalize()
@@ -65,4 +71,5 @@ class Environment:
             for run_config, config_name in zip(self.config.run_configurations, self.config.run_config_names):
                 runner = ProcessRunner(run_config, file, config_name, self.config)
                 timings = runner.run()
+                self.results[config_name].add_results(timings)
                 self.file_writer.add_timing_entry(timings)

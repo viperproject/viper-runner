@@ -5,7 +5,7 @@ import os
 import psutil
 
 from src.util import replace_placeholders
-from src.run_result import RunResult
+from src.result import SingleRunResult
 
 __author__ = 'froth'
 
@@ -33,7 +33,7 @@ class ProcessRunner:
                   str(i + 1) + " of " + str(self.config.repetitions) + "...")
             print("Command: '" + " ".join(concrete_command))
 
-            curr_result = RunResult(self.file, self.config_name)
+            curr_result = SingleRunResult(self.file)
             self.run_process(concrete_command, self.file, i, curr_result)
 
             results.append(curr_result)
