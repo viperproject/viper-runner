@@ -65,4 +65,4 @@ class Environment:
             for run_config, config_name in zip(self.config.run_configurations, self.config.run_config_names):
                 runner = ProcessRunner(run_config, file, config_name, self.config)
                 timings = runner.run()
-                self.file_writer.add_timing_entry(timings, file, config_name)
+                self.file_writer.add_timing_entry(timings)

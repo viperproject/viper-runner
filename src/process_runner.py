@@ -5,6 +5,7 @@ import os
 import psutil
 
 from src.util import replace_placeholders
+from src.run_result import RunResult
 
 __author__ = 'froth'
 
@@ -22,7 +23,7 @@ class ProcessRunner:
         self.config_name = config_name
 
     def run(self):
-        timings = []
+        results = []
         for i in range(0, self.config.repetitions):
             # replace placeholders in command
             concrete_command = [replace_placeholders(cmd, file=self.file, repetition=i, config_name=self.config_name)
@@ -32,24 +33,25 @@ class ProcessRunner:
                   str(i + 1) + " of " + str(self.config.repetitions) + "...")
             print("Command: '" + " ".join(concrete_command))
 
-            elapsed, exit_condition = self.run_process(concrete_command, self.file, i)
+            curr_result = RunResult(self.file, self.config_name)
+            self.run_process(concrete_command, self.file, i, curr_result)
 
-            timings.append((elapsed, exit_condition))
+            results.append(curr_result)
             print()
-            print("Time elapsed: " + "{:.3f}".format(elapsed) + " seconds")
+            print("Time elapsed: " + "{:.3f}".format(curr_result.time_elapsed) + " seconds")
             print()
-        return timings
+        return results
 
-    def run_process(self, cmd, file, repetition):
+    def run_process(self, cmd, file, repetition, result):
         stdout_output, stderr_output = self.get_process_output(file, repetition)
 
         # run the actual process
         start = time.perf_counter()
         process = subprocess.Popen(cmd, stdout=stdout_output, stderr=stderr_output)
         try:
-            exit_condition = process.wait(timeout=self.config.timeout)
+            result.return_code = process.wait(timeout=self.config.timeout)
         except subprocess.TimeoutExpired:
-            exit_condition = "timeout"
+            result.timeout_occurred = True
             # kill process and all its children
             parent = psutil.Process(process.pid)
             for child in parent.children(recursive=True):
@@ -64,7 +66,7 @@ class ProcessRunner:
                 stdout_output.close()
             if self.config.stderr_file_name:
                 stderr_output.close()
-        return end - start, str(exit_condition)
+        result.time_elapsed = end-start
 
     def get_process_output(self, file, repetition):
         # generate file names for output files.

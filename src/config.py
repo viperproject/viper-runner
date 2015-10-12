@@ -1,5 +1,7 @@
 import os
-from src.util import replace_placeholders, CURR_DATE
+from src.util import replace_placeholders
+from pprint import pprint
+
 
 __author__ = 'froth'
 
@@ -29,14 +31,7 @@ class Config:
     def print(self):
         print()
         print("Configuration:")
-        print("    Run configurations: " + str(self.run_configurations))
-        print("    Run configuration names: " + str(self.run_config_names))
-        print("    Test folder: " + self.testFolder)
-        print("    Ignored tests: " + str(self.ignoreList))
-        print("    Timeout: " + str(self.timeout) + " seconds")
-        print("    Test repetitions: " + str(self.repetitions))
-        print("    CSV file with timings: " + self.timing_csv_file_name)
-        print("    Print process output: " + str(self.print_output))
+        pprint(vars(self))
         print()
 
     def read_config_file(self, config_file):
