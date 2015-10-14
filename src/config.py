@@ -23,7 +23,9 @@ class Config:
         self.timeout = 60  # seconds
         self.repetitions = 5
         self.list_files = False
-        self.timing_csv_file_name = "timings.txt"
+        self.timing_csv_file_name = ""
+        self.avg_per_config_timing_csv_file_name = ""
+        self.per_config_timing_csv_file_name = ""
         self.print_output = False
         self.stdout_file_name = ""
         self.stderr_file_name = ""
@@ -95,6 +97,10 @@ class Config:
                             self.run_config_names[idx - 1] = config_name
                     elif opt == "timing_csv":
                         self.timing_csv_file_name = replace_placeholders(line_splits.pop())
+                    elif opt == "avg_per_config_timing_csv":
+                        self.avg_per_config_timing_csv_file_name = replace_placeholders(line_splits.pop())
+                    elif opt == "per_config_timing_csv":
+                        self.per_config_timing_csv_file_name = replace_placeholders(line_splits.pop())
                     elif opt == "print_process_output":
                         self.print_output = parse_bool(line_splits.pop())
                     elif opt == "stdout_file":

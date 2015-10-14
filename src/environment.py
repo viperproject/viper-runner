@@ -1,9 +1,8 @@
 import os
 from src.process_runner import ProcessRunner
 from src.config import Config
-from src.filewriter import FileWriter
 from src.result import RunResult
-from src.result_analyzer import ResultAnalyzer
+from src.result_processor import ResultProcessor
 
 __author__ = 'froth'
 
@@ -19,7 +18,7 @@ class Environment:
         self.config = Config()
         self.files = []
         self.file_writer = None
-        self.results = {}
+        self.results = RunResult()
         self.analyzer = None
 
     def exec(self, config_file_name):
@@ -27,22 +26,13 @@ class Environment:
         self.collect_test_files()
         self.print_info()
         self.run_processes()
-        self.finalize()
 
     def init_env(self, config_file):
         self.config.read_config_file(config_file)
-        self.file_writer = FileWriter()
-        self.file_writer.init_output_file(self.config.timing_csv_file_name, print_header=True)
-
-        # initialize result collection.
-        for name in self.config.run_config_names:
-            self.results[name] = RunResult(name)
-
-    def finalize(self):
-        self.file_writer.finalize()
 
     def analyze(self):
-        self.analyzer = ResultAnalyzer(self.results, self.config)
+        self.analyzer = ResultProcessor(self.results, self.config)
+        self.analyzer.write_result_files()
         self.analyzer.print_summary()
 
     def print_info(self):
@@ -71,11 +61,10 @@ class Environment:
     def run_processes(self):
         """
         Runs all the benchmarks.
-        :return:
+        :return: None
         """
         for file in self.files:
             for run_config, config_name in zip(self.config.run_configurations, self.config.run_config_names):
                 runner = ProcessRunner(run_config, file, config_name, self.config)
                 timings = runner.run()
-                self.results[config_name].add_results(timings)
-                self.file_writer.add_timing_entry(config_name, timings)
+                self.results.add_results(timings)

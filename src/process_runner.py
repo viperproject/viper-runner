@@ -33,7 +33,7 @@ class ProcessRunner:
                   str(i + 1) + " of " + str(self.config.repetitions) + "...")
             print("Command: '" + " ".join(concrete_command))
 
-            curr_result = SingleRunResult(self.file)
+            curr_result = SingleRunResult(self.config_name, self.file)
             self.run_process(concrete_command, self.file, i, curr_result)
 
             results.append(curr_result)
@@ -61,6 +61,9 @@ class ProcessRunner:
                 print("Process was killed due to timeout!")
             except psutil.NoSuchProcess:
                 # ignore this exception. This just means that this process barely made it.
+                pass
+            except psutil.AccessDenied:
+                # ignore this exception.
                 pass
         finally:
             end = time.perf_counter()
