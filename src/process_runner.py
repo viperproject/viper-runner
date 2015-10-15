@@ -22,14 +22,16 @@ class ProcessRunner:
         self.file = file
         self.config_name = config_name
 
-    def run(self):
+    def run(self, n_run, total):
         results = []
         for i in range(0, self.config.repetitions):
             # replace placeholders in command
             concrete_command = [replace_placeholders(cmd, file=self.file, repetition=i, config_name=self.config_name)
                                 for cmd in self.command]
 
-            print(datetime.datetime.now().strftime("%d.%m.%Y, %H:%M:%S") + ": running next job, repetition " +
+            print(datetime.datetime.now().strftime("%d.%m.%Y, %H:%M:%S") +
+                  ": running job " + str(n_run + i) +
+                  " of " + str(total) + ", repetition " +
                   str(i + 1) + " of " + str(self.config.repetitions) + "...")
             print("Command: '" + " ".join(concrete_command))
 

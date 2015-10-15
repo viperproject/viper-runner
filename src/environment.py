@@ -63,8 +63,11 @@ class Environment:
         Runs all the benchmarks.
         :return: None
         """
+        i = 1
+        total = len(self.files) * len(self.config.run_configurations) * self.config.repetitions
         for file in self.files:
             for run_config, config_name in zip(self.config.run_configurations, self.config.run_config_names):
                 runner = ProcessRunner(run_config, file, config_name, self.config)
-                timings = runner.run()
+                timings = runner.run(i, total)
                 self.results.add_results(timings)
+                i += self.config.repetitions
