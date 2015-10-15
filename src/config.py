@@ -20,7 +20,7 @@ class Config:
         self.run_configurations = [["../carbon/carbon.bat"]]
         self.run_config_names = ["Default"]
         self.ignoreList = []
-        self.timeout = 60  # seconds
+        self.timeout = None  # seconds > 0 or None
         self.repetitions = 5
         self.list_files = False
         self.timing_csv_file_name = ""
@@ -77,6 +77,8 @@ class Config:
                     elif opt == "timeout":
                         try:
                             self.timeout = int(line_splits[0])
+                            if self.timeout <= 0:
+                                self.timeout = None
                         except ValueError:
                             print("Error: Unable to parse '" + line_splits[0] + "' as timeout [seconds].")
                     elif opt == "list_files":
