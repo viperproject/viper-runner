@@ -43,23 +43,45 @@ class ResultProcessor:
         print("Collected " + str(self.run_result.n_measurements) + " data points.")
 
     def write_result_files(self):
-        # write raw timings csv
+        """
+        Writes the various result files.
+        """
         if self.csv_timings_raw_writer:
-            for results_per_file in self.run_result.file_to_result.values():
-                for result in results_per_file:
-                    self.csv_timings_raw_writer.write_line(";".join(
-                        [str(result.time_elapsed),
-                         result.input_file,
-                         result.config_name,
-                         str(result.return_code),
-                         str(result.timeout_occurred)]))
-            self.csv_timings_raw_writer.finalize()
+            self.write_result_csv()
+
+        if self.csv_timings_per_config_writer:
+            self.writer_per_config_file()
+
+    def write_result_csv(self):
+        try:
+            with FileWriter(self.config.timing_csv_file_name, header="runtime [s];"
+                                                                     " input file;"
+                                                                     " run configuration;"
+                                                                     " exit code;"
+                                                                     " timeout") as writer:
+                for results_per_file in self.run_result.file_to_result.values():
+                    for result in results_per_file:
+                        writer.write_line(";".join([str(result.time_elapsed),
+                                                    result.input_file,
+                                                    result.config_name,
+                                                    str(result.return_code),
+                                                    str(result.timeout_occurred)]))
+        except IOError:
+            print("Error writing to file '" + self.config.timing_csv_file_name + "'. ")
+
+    def writer_per_config_file(self):
+        # Assemble file header
+        header = list(self.config.run_config_names)
+        header.sort()
+        header = [[name + ", runtime [s]", name + ", exit condition", name + ", timeout"] for name in header]
+        # flatten
+        header = [string for cfg_header in header for string in cfg_header]
+        header.insert(0, "input file")
+        header = ";".join(header)
 
         config_names = self.config.run_config_names
         config_names.sort()
-
-        # write per config timings csv
-        if self.csv_timings_per_config_writer:
+        with FileWriter(self.config.timing_csv_file_name, header=header) as writer:
             for file, cfg_dict in self.run_result.file_to_sorted_result.items():
                 for i in range(0, self.config.repetitions):
                     values = [file]
@@ -69,8 +91,7 @@ class ResultProcessor:
                         values.append(str(curr_result.return_code))
                         values.append(str(curr_result.timeout_occurred))
 
-                    self.csv_timings_per_config_writer.write_line(";".join(values))
-            self.csv_timings_per_config_writer.finalize()
+                    writer.write_line(";".join(values))
 
         # write per config average timings csv
         if self.csv_timings_cfg_avg_writer:
