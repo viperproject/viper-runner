@@ -57,6 +57,7 @@ class FileWriter:
     def __enter__(self):
         if not self.file_open:
             self.open_file()
+        return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.finalize()

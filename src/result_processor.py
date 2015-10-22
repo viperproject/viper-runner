@@ -11,7 +11,7 @@ class ResultProcessor:
     def __init__(self, run_result, config):
         self.run_result = run_result
         self.config = config
-        self.run_result.process_timings()
+        self.results_processed = False
 
     def print_summary(self):
         print("Collected " + str(self.run_result.n_measurements) + " data points.")
@@ -20,6 +20,9 @@ class ResultProcessor:
         """
         Writes the various result files.
         """
+        if not self.results_processed:
+            self.run_result.process_timings()
+
         if self.config.timing_csv_file_name:
             self.write_result_csv()
 
@@ -69,7 +72,7 @@ class ResultProcessor:
                     values.append(str(curr_result.timeout_occurred))
                 data.append(values)
 
-        with FileWriter(self.config.timing_csv_file_name) as writer:
+        with FileWriter(self.config.per_config_timing_csv_file_name) as writer:
             writer.write_csv_data(data)
 
     def write_avg_result_file(self):
@@ -90,5 +93,5 @@ class ResultProcessor:
                 values.append(str(curr_result))
             data.append(values)
 
-        with FileWriter(self.config.timing_csv_file_name) as writer:
+        with FileWriter(self.config.avg_per_config_timing_csv_file_name) as writer:
             writer.write_csv_data(data)

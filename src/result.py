@@ -34,18 +34,24 @@ class RunResult:
         for file_name, data in self.file_to_result.items():
             config_to_avg_time = {}
             config_to_time = {}
+
             # collect all timings required
             for res in data:
                 if res.config_name not in config_to_avg_time:
                     config_to_avg_time[res.config_name] = []
                     config_to_time[res.config_name] = []
                 config_to_time[res.config_name].append(res)
-                config_to_avg_time[res.config_name].append(res.time_elapsed)
+                if not res.timeout_occurred and not res.return_code:
+                    config_to_avg_time[res.config_name].append(res.time_elapsed)
 
             self.file_to_sorted_result[file_name] = config_to_time
             # take the average
             for config_name in config_to_avg_time:
-                config_to_avg_time[config_name] = mean(config_to_avg_time[config_name])
+                if config_to_avg_time[config_name]:
+                    processed_result = mean(config_to_avg_time[config_name])
+                else:
+                    processed_result = "No valid data."
+                config_to_avg_time[config_name] = processed_result
             self.file_to_result_avg[file_name] = config_to_avg_time
 
 
