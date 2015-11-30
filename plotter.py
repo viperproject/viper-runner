@@ -2,6 +2,7 @@ import csv
 import argparse
 import numpy
 import matplotlib.pyplot as plt
+import os.path
 
 parser = argparse.ArgumentParser(description='Viper runner result plotter.')
 parser.add_argument('-max', dest='max', type=int, help='cutoff value for plotting.')
@@ -89,6 +90,10 @@ for i in range(0, len(configs)):
         plt.ylabel(config2 + ", runtime in [s]")
         plt.grid(True)
         print(str(len(data)) + " points")
+
+        fig_name = os.path.join(os.path.dirname(os.path.realpath(args.csv)), config1 + "_vs_" + config2 + "_scatter") + ""
+        plt.savefig(fig_name, dpi=600)
+
         plt.show()
 
 
