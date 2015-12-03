@@ -1,4 +1,5 @@
 import os
+import shutil
 from src.util import replace_placeholders
 from pprint import pprint
 
@@ -114,6 +115,20 @@ class Config:
 
         except IOError:
             print("Unable to read '" + config_file + "'. Resorting to default configuration.")
+
+        print("Copying config to output folder...")
+
+        # generate output folder if it does not yet exist
+        output_dir = os.path.dirname(self.timing_csv_file_name)
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir)
+
+        # create file in case it does not yet exist.
+        config_copy_filename = os.path.join(output_dir, os.path.basename(config_file))
+        open(config_copy_filename, 'a').close()
+
+        # copy content
+        shutil.copyfile(config_file, config_copy_filename)
         print("Done.")
 
 
