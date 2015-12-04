@@ -30,9 +30,8 @@ with open(args.csv, newline='') as csv_file:
         if config_name not in file_dict:
             file_dict[config_name] = []
 
-        if int(line[3]) == 0:
-            time = float(line[0])
-            file_dict[config_name].append(time)
+        time = float(line[0])
+        file_dict[config_name].append(time)
 
 # Process data
 for file, file_data in data.items():
@@ -80,11 +79,7 @@ for i in range(0, len(configs)):
             if not curr_min or tmp_min < curr_min:
                 curr_min = tmp_min
 
-        plt.plot([curr_max, curr_max + 0.1], [curr_max, curr_max + 0.1], 'r-')
-        axes = plt.gca()
-        axes_max = max(axes.get_xlim() + axes.get_ylim())
-        axes_min = min(axes.get_xlim() + axes.get_ylim())
-        plt.plot([axes_min, axes_max], [axes_min, axes_max], 'r-')
+        plt.plot([curr_min, curr_max + 0.1], [curr_min, curr_max + 0.1], 'r-')
         plt.title("Runtime comparison: " + config1 + " vs " + config2)
         plt.xlabel(config1 + ", runtime in [s]")
         plt.ylabel(config2 + ", runtime in [s]")
