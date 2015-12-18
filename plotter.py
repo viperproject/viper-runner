@@ -50,7 +50,7 @@ configs.sort()
 for i in range(0, len(configs)):
     config1 = configs[i]
 
-    for j in range(i+1, len(configs)):
+    for j in range(i + 1, len(configs)):
         config2 = configs[j]
         plt.figure()
 
@@ -81,7 +81,7 @@ for i in range(0, len(configs)):
             if y < x:
                 config2_faster += 1
             if x != max_value and y != max_value:
-                diffs.append(x-y)
+                diffs.append(x - y)
             plt.errorbar(x, y, xerr=x_dev, yerr=y_dev, fmt=fmt)
 
             tmp_max = max(x, y)
@@ -94,30 +94,35 @@ for i in range(0, len(configs)):
         plt.rc('text', usetex=True)
         plt.rc('font', family='serif', size=16)
         plt.plot([curr_min, curr_max + 0.1], [curr_min, curr_max + 0.1], 'r-')
-        plt.title("Runtime comparison: " + config1 + " vs " + config2)
-        plt.xlabel(config1 + ", runtime in [s]")
-        plt.ylabel(config2 + ", runtime in [s]")
+        config1_name = config1.upper()
+        config2_name = config2.upper()
+        plt.title("Runtime comparison: " + config1_name + " vs " + config2_name)
+        plt.xlabel(config1_name + ", runtime in [s]")
+        plt.ylabel(config2_name + ", runtime in [s]")
         plt.grid(True)
-        print(str(len(data)) + " points")
-        print("config " + config1 + " was faster " + str(config1_faster) + " times.")
-        print("config " + config2 + " was faster " + str(config2_faster) + " times.")
-        print(str(len(data) - config1_faster - config2_faster) + " times both were exactly equally fast (or timeout).")
-
-        # differences statistics
-        diffs_arr = arr = numpy.array(diffs)
-        mean_diff = numpy.mean(diffs)
-        variance_diffs = numpy.var(diffs)
-        std_diffs = numpy.std(diffs)
-
-        print("Mean difference (" + config1 + " - " + config2 + ") was " +
-              str(mean_diff) + ", standard deviation was " + str(std_diffs) +
-              ", variance was " + str(variance_diffs) + " .")
 
         time = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
-        fig_name = os.path.join(os.path.dirname(os.path.realpath(args.csv)),
-                                time + "_" + config1 + "_vs_" + config2 + "_scatter.pdf") + ""
+        file_name = os.path.join(os.path.dirname(os.path.realpath(args.csv)),
+                                 time + "_" + config1 + "_vs_" + config2 + "_scatter") + ""
+
+        with open(file_name + ".txt", 'w+') as plotInfoFile:
+            plotInfoFile.writelines(str(len(data)) + " points\n")
+            plotInfoFile.writelines("config " + config1 + " was faster " + str(config1_faster) + " times.\n")
+            plotInfoFile.writelines("config " + config2 + " was faster " + str(config2_faster) + " times.\n")
+            plotInfoFile.writelines(str(len(data) - config1_faster - config2_faster) +
+                                    " times both were exactly equally fast (or timeout).\n")
+
+            # differences statistics
+            diffs_arr = arr = numpy.array(diffs)
+            mean_diff = numpy.mean(diffs)
+            variance_diffs = numpy.var(diffs)
+            std_diffs = numpy.std(diffs)
+
+            plotInfoFile.writelines("Mean difference (" + config1 + " - " + config2 + ") was " +
+                                    str(mean_diff) + ", standard deviation was " + str(std_diffs) +
+                                    ", variance was " + str(variance_diffs) + ".\n")
+
+        fig_name = file_name + ".pdf"
         plt.savefig(fig_name, dpi=600, format="pdf")
 
         # plt.show()
-
-
