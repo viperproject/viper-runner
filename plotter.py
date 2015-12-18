@@ -118,6 +118,6 @@ for i in range(0, len(configs)):
                                 time + "_" + config1 + "_vs_" + config2 + "_scatter.pdf") + ""
         plt.savefig(fig_name, dpi=600, format="pdf")
 
-        plt.show()
+        # plt.show()
 
 
