@@ -60,6 +60,8 @@ for i in range(0, len(configs)):
         config1_faster = 0
         config2_faster = 0
 
+        diffs = []
+
         for file, config_dict in data.items():
             (x, x_dev) = mean_std_dev_dict[file][config1]
             (y, y_dev) = mean_std_dev_dict[file][config2]
@@ -78,6 +80,8 @@ for i in range(0, len(configs)):
                 config1_faster += 1
             if y < x:
                 config2_faster += 1
+            if x != max_value and y != max_value:
+                diffs.append(x-y)
 
             plt.errorbar(x, y, xerr=x_dev, yerr=y_dev, fmt=fmt)
 
@@ -97,6 +101,16 @@ for i in range(0, len(configs)):
         print("config " + config1 + " was faster " + str(config1_faster) + " times.")
         print("config " + config2 + " was faster " + str(config2_faster) + " times.")
         print(str(len(data) - config1_faster - config2_faster) + " times both were exactly equally fast (or timeout).")
+
+        # differences statistics
+        diffs_arr = arr = numpy.array(diffs)
+        mean_diff = numpy.mean(diffs)
+        variance_diffs = numpy.var(diffs)
+        std_diffs = numpy.std(diffs)
+
+        print("Mean difference (" + config1 + " - " + config2 + ") was " +
+              str(mean_diff) + ", standard deviation was " + str(std_diffs) +
+              ", variance was " + str(variance_diffs) + " .")
 
         time = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
         fig_name = os.path.join(os.path.dirname(os.path.realpath(args.csv)),
