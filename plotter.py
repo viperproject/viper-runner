@@ -70,11 +70,11 @@ for i in range(0, len(configs)):
             if x == -1 or 0 < max_value < x:
                 x = max_value
                 x_dev = None
-                fmt = 'ro'
+                fmt = 'rs'
             if y == -1 or 0 < max_value < y:
                 y = max_value
                 y_dev = None
-                fmt = 'ro'
+                fmt = 'rs'
 
             if x < y:
                 config1_faster += 1
@@ -82,7 +82,6 @@ for i in range(0, len(configs)):
                 config2_faster += 1
             if x != max_value and y != max_value:
                 diffs.append(x-y)
-
             plt.errorbar(x, y, xerr=x_dev, yerr=y_dev, fmt=fmt)
 
             tmp_max = max(x, y)
@@ -114,8 +113,8 @@ for i in range(0, len(configs)):
 
         time = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
         fig_name = os.path.join(os.path.dirname(os.path.realpath(args.csv)),
-                                time + "_" + config1 + "_vs_" + config2 + "_scatter") + ""
-        plt.savefig(fig_name, dpi=600)
+                                time + "_" + config1 + "_vs_" + config2 + "_scatter.pdf") + ""
+        plt.savefig(fig_name, dpi=600, format="pdf")
 
         plt.show()
 
