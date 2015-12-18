@@ -91,6 +91,8 @@ for i in range(0, len(configs)):
             if not curr_min or tmp_min < curr_min:
                 curr_min = tmp_min
 
+        plt.rc('text', usetex=True)
+        plt.rc('font', family='serif', size=16)
         plt.plot([curr_min, curr_max + 0.1], [curr_min, curr_max + 0.1], 'r-')
         plt.title("Runtime comparison: " + config1 + " vs " + config2)
         plt.xlabel(config1 + ", runtime in [s]")
