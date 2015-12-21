@@ -52,7 +52,7 @@ for i in range(0, len(configs)):
 
     for j in range(i + 1, len(configs)):
         config2 = configs[j]
-        plt.figure()
+        fig = plt.figure()
 
         curr_min = None
         curr_max = 0
@@ -61,6 +61,8 @@ for i in range(0, len(configs)):
         config2_faster = 0
 
         diffs = []
+
+        count_cutoffs = 0
 
         for file, config_dict in data.items():
             (x, x_dev) = mean_std_dev_dict[file][config1]
@@ -80,8 +82,12 @@ for i in range(0, len(configs)):
                 config1_faster += 1
             if y < x:
                 config2_faster += 1
+
             if x != max_value and y != max_value:
                 diffs.append(x - y)
+            else:
+                count_cutoffs += 1
+
             plt.errorbar(x, y, xerr=x_dev, yerr=y_dev, fmt=fmt)
 
             tmp_max = max(x, y)
@@ -96,7 +102,11 @@ for i in range(0, len(configs)):
         plt.plot([curr_min, curr_max + 0.1], [curr_min, curr_max + 0.1], 'r-')
         config1_name = config1.upper()
         config2_name = config2.upper()
-        plt.title("Runtime comparison: " + config1_name + " vs " + config2_name)
+
+        # raised title
+        title = "Runtime comparison: " + config1_name + " vs " + config2_name
+        fig.suptitle(title, fontsize=20)
+
         plt.xlabel(config1_name + ", runtime in [s]")
         plt.ylabel(config2_name + ", runtime in [s]")
         plt.grid(True)
@@ -109,6 +119,7 @@ for i in range(0, len(configs)):
             plotInfoFile.writelines(str(len(data)) + " points\n")
             plotInfoFile.writelines("config " + config1 + " was faster " + str(config1_faster) + " times.\n")
             plotInfoFile.writelines("config " + config2 + " was faster " + str(config2_faster) + " times.\n")
+            plotInfoFile.writelines(str(count_cutoffs) + " points were marked red due to cutoff.\n")
             plotInfoFile.writelines(str(len(data) - config1_faster - config2_faster) +
                                     " times both were exactly equally fast (or timeout).\n")
 
