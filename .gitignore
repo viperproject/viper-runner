@@ -57,3 +57,5 @@ docs/_build/
 target/
 .idea/
 results/
+timeout_tests_carbon/
+tmp/

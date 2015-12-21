@@ -60,6 +60,8 @@ for i in range(0, len(configs)):
         config1_faster = 0
         config2_faster = 0
 
+        diffs = []
+
         for file, config_dict in data.items():
             (x, x_dev) = mean_std_dev_dict[file][config1]
             (y, y_dev) = mean_std_dev_dict[file][config2]
@@ -68,17 +70,18 @@ for i in range(0, len(configs)):
             if x == -1 or 0 < max_value < x:
                 x = max_value
                 x_dev = None
-                fmt = 'ro'
+                fmt = 'rs'
             if y == -1 or 0 < max_value < y:
                 y = max_value
                 y_dev = None
-                fmt = 'ro'
+                fmt = 'rs'
 
             if x < y:
                 config1_faster += 1
             if y < x:
                 config2_faster += 1
-
+            if x != max_value and y != max_value:
+                diffs.append(x-y)
             plt.errorbar(x, y, xerr=x_dev, yerr=y_dev, fmt=fmt)
 
             tmp_max = max(x, y)
@@ -88,6 +91,8 @@ for i in range(0, len(configs)):
             if not curr_min or tmp_min < curr_min:
                 curr_min = tmp_min
 
+        plt.rc('text', usetex=True)
+        plt.rc('font', family='serif', size=16)
         plt.plot([curr_min, curr_max + 0.1], [curr_min, curr_max + 0.1], 'r-')
         plt.title("Runtime comparison: " + config1 + " vs " + config2)
         plt.xlabel(config1 + ", runtime in [s]")
@@ -98,10 +103,20 @@ for i in range(0, len(configs)):
         print("config " + config2 + " was faster " + str(config2_faster) + " times.")
         print(str(len(data) - config1_faster - config2_faster) + " times both were exactly equally fast (or timeout).")
 
+        # differences statistics
+        diffs_arr = arr = numpy.array(diffs)
+        mean_diff = numpy.mean(diffs)
+        variance_diffs = numpy.var(diffs)
+        std_diffs = numpy.std(diffs)
+
+        print("Mean difference (" + config1 + " - " + config2 + ") was " +
+              str(mean_diff) + ", standard deviation was " + str(std_diffs) +
+              ", variance was " + str(variance_diffs) + " .")
+
         time = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
         fig_name = os.path.join(os.path.dirname(os.path.realpath(args.csv)),
-                                time + "_" + config1 + "_vs_" + config2 + "_scatter") + ""
-        plt.savefig(fig_name, dpi=600)
+                                time + "_" + config1 + "_vs_" + config2 + "_scatter.pdf") + ""
+        plt.savefig(fig_name, dpi=600, format="pdf")
 
         plt.show()
 
