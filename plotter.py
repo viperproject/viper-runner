@@ -103,10 +103,6 @@ for i in range(0, len(configs)):
         config1_name = config1.upper()
         config2_name = config2.upper()
 
-        # raised title
-        title = "Runtime comparison: " + config1_name + " vs " + config2_name
-        fig.suptitle(title, fontsize=20)
-
         plt.xlabel(config1_name + ", runtime in [s]")
         plt.ylabel(config2_name + ", runtime in [s]")
         plt.grid(True)
