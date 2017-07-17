@@ -41,15 +41,27 @@ class Environment:
 
     def collect_test_files(self):
         """
-        Searches recursively in the test folder for .sil files.
-        These files are filtered against the ignore list and constitute
-        all programs to be benchmarked.
+        Collects all test files: either by recursively searching the specified test folder
+        (config option 'test_folder') or by reading the tests line by line from the specified
+        file (config option 'test_files_in_file').
         :return: None
         """
-        for root, dirs, files in os.walk(self.config.testFolder):
-            bench_files = [os.path.normpath(os.path.join(root, f)) for f in files if f.endswith('.sil') and
-                           not os.path.join(root, f).endswith(tuple(self.config.ignoreList))]
-            self.files.extend(bench_files)
+        if self.config.testFolder != "":
+          # Searches recursively in the test folder for .sil and .vpr files.
+          # These files are filtered against the ignore list and constitute
+          # all programs to be benchmarked.        
+          for root, dirs, files in os.walk(self.config.testFolder):
+              bench_files = [os.path.normpath(os.path.join(root, f))
+                             for f in files 
+                             if (f.endswith('.sil') or f.endswith('.vpr'))
+                                and not os.path.join(root, f).endswith(tuple(self.config.ignoreList))]
+              self.files.extend(bench_files)
+        elif self.config.testFilesInFile != "":
+          with open(self.config.testFilesInFile) as fh:
+            self.files = fh.readlines()
+          self.files = [filename.strip() for filename in self.files]
+        else:
+          raise Exception("Neither 'test_folder' nor 'test_files_in_file' are set.")
 
     def print_file_list(self):
         print(str(len(self.files)) + " file(s) included in the benchmark.")

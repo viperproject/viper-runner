@@ -17,9 +17,10 @@ class Config:
         Initializes default config.
         :return: None
         """
-        self.testFolder = "../silver/src/test/resources/all"
-        self.run_configurations = [["../carbon/carbon.bat"]]
-        self.run_config_names = ["Default"]
+        self.testFolder = ""
+        self.testFilesInFile = ""
+        self.run_configurations = []
+        self.run_config_names = []
         self.ignoreList = []
         self.timeout = None  # seconds > 0 or None
         self.repetitions = 5
@@ -58,6 +59,8 @@ class Config:
                     # option parsing
                     if opt == "test_folder":
                         self.testFolder = line_splits.pop()
+                    elif opt == "test_files_in_file":
+                        self.testFilesInFile = line_splits.pop()                        
                     elif opt == "run_configuration":
                         # override default run configurations
                         if run_config_override:
