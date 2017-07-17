@@ -26,11 +26,12 @@ def replace_placeholders(string, file="", repetition=PLACEHOLDER_REP, date=CURR_
 
 
 def generate_path_dependent_filename(file):
+    _, file = os.path.splitdrive(file)
+
     folders = []
     while True:
         path, folder = os.path.split(file)
-
-        if path:
+        if path != "" and path != "/" and path != "\\":
             folders.append(folder)
         else:
             break
