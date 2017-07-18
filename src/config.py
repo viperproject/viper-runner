@@ -21,6 +21,7 @@ class Config:
         self.testFilesInFile = ""
         self.run_configurations = []
         self.run_config_names = []
+        self.run_periodically = []
         self.ignoreList = []
         self.timeout = None  # seconds > 0 or None
         self.repetitions = 5
@@ -101,6 +102,14 @@ class Config:
                         else:
                             idx = len(self.run_configurations)
                             self.run_config_names[idx - 1] = config_name
+                    elif opt == "run_periodically":
+                      [mode, count] = [p.strip() for p in line_splits.pop().split(" ")]
+                      assert mode == "after_files", "Currently only 'after_files' is supported"
+                      self.run_periodically.append(dict(after_files=int(count), cmds = []))
+                    elif opt == "cmd":
+                        parts = line_splits.pop().split(" ")
+                        idx = len(self.run_periodically)
+                        self.run_periodically[idx - 1]["cmds"].append(parts)
                     elif opt == "timing_csv":
                         self.timing_csv_file_name = replace_placeholders(line_splits.pop())
                     elif opt == "avg_per_config_timing_csv":

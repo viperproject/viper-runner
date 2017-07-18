@@ -13,9 +13,6 @@ class ResultProcessor:
         self.config = config
         self.results_processed = False
 
-    def print_summary(self):
-        print("Collected " + str(self.run_result.n_measurements) + " data points.")
-
     def write_result_files(self):
         """
         Writes the various result files.
