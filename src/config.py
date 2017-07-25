@@ -32,6 +32,7 @@ class Config:
         self.print_output = False
         self.stdout_file_name = ""
         self.stderr_file_name = ""
+        self.confirm_start = True
 
     def print(self):
         print()
@@ -122,6 +123,8 @@ class Config:
                         self.stdout_file_name = line_splits.pop()
                     elif opt == "stderr_file":
                         self.stderr_file_name = line_splits.pop()
+                    elif opt == "confirm_start":
+                        self.confirm_start = parse_bool(line_splits.pop())
                     else:
                         print("Skipping unknown configuration option '" + opt + "'.")
 

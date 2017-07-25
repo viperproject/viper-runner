@@ -1,9 +1,11 @@
+import sys
 import time
 import os
 from src.process_runner import ProcessRunner
 from src.config import Config
 from src.result import RunResult, SingleRunResult
 from src.result_processor import ResultProcessor
+from src.getch import getch
 
 __author__ = 'froth'
 
@@ -23,10 +25,12 @@ class Environment:
         self.analyzer = None
         self.start_time = 0.0
         self.end_time = 0.0
+        self.total_jobs = 0
 
     def exec(self, config_file_name):
         self.init_env(config_file_name)
         self.collect_test_files()
+        self.total_jobs = len(self.files) * len(self.config.run_configurations) * self.config.repetitions
         self.start_time = time.perf_counter()
         self.print_start_info()
         self.run_processes()
@@ -41,6 +45,12 @@ class Environment:
 
     def print_start_info(self):
         self.config.print()
+        print("Total number of:")
+        print("  configurations = {}".format(len(self.config.run_configurations)))
+        print("  repetitions = {}".format(self.config.repetitions))
+        print("  files = {}".format(len(self.files)))
+        print("  jobs = {}".format(self.total_jobs))
+        self.confirm_or_quit()
         self.print_file_list()
         
     def print_end_info(self):
@@ -73,11 +83,13 @@ class Environment:
           raise Exception("Neither 'test_folder' nor 'test_files_in_file' are set.")
 
     def print_file_list(self):
-        print(str(len(self.files)) + " file(s) included in the benchmark.")
         if self.config.list_files:
+            print()
+            print("The following files are included in the benchmark:")
             for file in self.files:
                 print("    " + file)
-        print()
+            print()
+            self.confirm_or_quit()
 
     def run_processes(self):
         """
@@ -85,12 +97,11 @@ class Environment:
         :return: None
         """
         i = 1
-        total = len(self.files) * len(self.config.run_configurations) * self.config.repetitions
         processed_files = 0
         for file in self.files:
             for run_config, config_name in zip(self.config.run_configurations, self.config.run_config_names):
                 runner = ProcessRunner(run_config, file, config_name, self.config)
-                timings = runner.run(i, total)
+                timings = runner.run(i, self.total_jobs)
                 self.results.add_results(timings)
                 i += self.config.repetitions
                 
@@ -108,3 +119,14 @@ class Environment:
                         irrelevant_result = SingleRunResult(config_name, file)
                         runner.run_process(cmd, file, -1, irrelevant_result)
                     print("")
+
+    def confirm_or_quit(self):
+        if self.config.confirm_start:
+            print("\nPress Q to quit, any other key to continue ...")
+            choice = str(getch()).upper()
+            print()
+            if choice == "Q":
+                self.exit(0)
+
+    def exit(self, exit_code):
+        sys.exit(exit_code)
