@@ -1,5 +1,9 @@
 #!/bin/bash
 
+SCRIPT_DIR=${0%/*} # https://stackoverflow.com/a/3588939
 PORT=$1
 
-/home/developer/source/viper-runner/warmup-viper.sh --repetitions 2 "./silicon.sh --mode nailgun --port $PORT" warmup.vpr
+$SCRIPT_DIR/warmup-viper.sh \
+    --repetitions 2 \
+    "$SCRIPT_DIR/silicon.sh --mode nailgun --port $PORT" \
+    $SCRIPT_DIR/warmup.vpr

@@ -85,6 +85,6 @@ if [ "$RESTART" = true ]; then
   $CMD
 fi
 
-CMD="$JAVA_CMD $JAVA_OPTS -cp $NAILGUN_JAR:$FATJAR $NAILGUN_MAIN"
+CMD="$JAVA_CMD $JAVA_OPTS -cp $NAILGUN_JAR:$FATJAR $NAILGUN_MAIN $PORT"
 # echo "Command: '$CMD'"
 coproc $CMD &

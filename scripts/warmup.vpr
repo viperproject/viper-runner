@@ -1,6 +1,31 @@
 field f: Int
 
-method test(x: Ref) {
+predicate P(x: Ref) { acc(x.f) }
+
+domain Dom {
+  function id(r: Ref): Ref
+  axiom id_def { forall r: Ref :: id(r) == r }
+}
+
+function get(xs: Set[Ref], y: Ref): Int
+  requires forall x: Ref :: x in xs ==> P(id(x))
+  requires y in xs
+{ unfolding P(id(y)) in y.f }
+
+method test01(xs: Set[Ref], y: Ref) {
+  inhale forall x: Ref :: x in xs ==> P(x)
+  inhale id(y) in xs
+  unfold P(y)
+  var i: Int := y.f
+  fold P(y)
+  assert get(xs, y) == i
+  exhale forall x: Ref :: x in xs ==> P(x)
+}
+
+method test02(x: Ref) {
   inhale acc(x.f)
-  assert x != null 
+  package true --* acc(x.f)
+  apply true --* acc(x.f)
+  exhale acc(x.f)
+  exhale acc(x.f)
 }
