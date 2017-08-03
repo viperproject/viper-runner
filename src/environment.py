@@ -33,6 +33,7 @@ class Environment:
         self.total_jobs = len(self.files) * len(self.config.run_configurations) * self.config.repetitions
         self.start_time = time.perf_counter()
         self.print_start_info()
+        self.check_files_accessible()
         self.run_processes()
         self.end_time = time.perf_counter()
 
@@ -90,6 +91,16 @@ class Environment:
                 print("    " + file)
             print()
             self.confirm_or_quit()
+
+    def check_files_accessible(self):
+        if self.config.check_files_accessible:
+            ok = True
+            for file in self.files:
+                if not (os.path.isfile(file) and os.access(file, os.R_OK)):
+                    print("Cannot access " + file)
+                    ok = False
+            if not ok:
+                self.exit(1)
 
     def run_processes(self):
         """

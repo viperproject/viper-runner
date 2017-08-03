@@ -26,6 +26,7 @@ class Config:
         self.timeout = None  # seconds > 0 or None
         self.repetitions = 5
         self.list_files = False
+        self.check_files_accessible = True
         self.timing_csv_file_name = ""
         self.avg_per_config_timing_csv_file_name = ""
         self.per_config_timing_csv_file_name = ""
@@ -89,6 +90,8 @@ class Config:
                             print("Error: Unable to parse '" + line_splits[0] + "' as timeout [seconds].")
                     elif opt == "list_files":
                         self.list_files = parse_bool(line_splits.pop())
+                    elif opt == "check_files_accessible":
+                        self.check_files_accessible = parse_bool(line_splits.pop())
                     elif opt == "arg":
                         # parse argument and add it to the last mentioned run_configuration.
                         arg = line_splits.pop().split(" ", maxsplit=1)
