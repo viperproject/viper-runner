@@ -1,0 +1,17 @@
+field f: Int
+
+predicate P(x: Ref) { acc(x.f) }
+
+method test03(x: Ref, y: Ref) 
+  requires acc(x.f)
+  ensures [true, forperm[f] r :: false]
+  ensures [true, forperm[P] r :: false] // False
+{
+  assert perm(x.f) == write
+  assume perm(y.f) == write
+  assert x == y
+  y.f := 0
+  exhale acc(y.f, 1/2)
+  assert forperm[f] r :: r.f == 0
+  fold acc(P(y), 1/2)
+}

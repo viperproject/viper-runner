@@ -21,11 +21,3 @@ method test01(xs: Set[Ref], y: Ref) {
   assert get(xs, y) == i
   exhale forall x: Ref :: x in xs ==> P(x)
 }
-
-method test02(x: Ref) {
-  inhale acc(x.f)
-  package true --* acc(x.f)
-  apply true --* acc(x.f)
-  exhale acc(x.f)
-  exhale acc(x.f)
-}

@@ -1,0 +1,9 @@
+field f: Int
+
+method test02(x: Ref) {
+  inhale acc(x.f)
+  package true --* acc(x.f)
+  apply true --* acc(x.f)
+  exhale acc(x.f)
+  exhale acc(x.f) // False
+}
