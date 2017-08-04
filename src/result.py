@@ -21,8 +21,8 @@ class RunResult:
             self.n_measurements += 1
             if result.timeout_occurred:
                 self.n_timeouts += 1
-            if result.return_code:
-                self.n_errors += 1
+            # if result.return_code:
+            #     self.n_errors += 1
 
             if result.input_file not in self.file_to_result:
                 self.file_to_result[result.input_file] = []
@@ -41,7 +41,7 @@ class RunResult:
                     config_to_avg_time[res.config_name] = []
                     config_to_time[res.config_name] = []
                 config_to_time[res.config_name].append(res)
-                if not res.timeout_occurred and not res.return_code:
+                if not res.timeout_occurred: # and not res.return_code:
                     config_to_avg_time[res.config_name].append(res.time_elapsed)
 
             self.file_to_sorted_result[file_name] = config_to_time
