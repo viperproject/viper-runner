@@ -46,7 +46,7 @@ class ProcessRunner:
 
     def run_process(self, cmd, file, repetition, result):
         stdout_output, stderr_output = self.get_process_output(file, repetition)
-
+        
         # run the actual process
         start = time.perf_counter()
         process = subprocess.Popen(cmd, stdout=stdout_output, stderr=stderr_output)
@@ -71,9 +71,9 @@ class ProcessRunner:
             end = time.perf_counter()
 
             # close files again, if they were opened
-            if self.config.stdout_file_name:
+            if self.config.stdout_file_name and stdout_output != None:
                 stdout_output.close()
-            if self.config.stderr_file_name:
+            if self.config.stderr_file_name and stderr_output != None:
                 stderr_output.close()
         result.time_elapsed = end-start
 
