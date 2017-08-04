@@ -130,6 +130,8 @@ class Environment:
                         irrelevant_result = SingleRunResult(config_name, file)
                         runner.run_process(cmd, file, -1, irrelevant_result)
                     print("")
+                    print("Executed periodically running command(s)")
+                    print("")
 
     def confirm_or_quit(self):
         if self.config.confirm_start:
