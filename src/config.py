@@ -2,6 +2,7 @@ import os
 import shutil
 from src.util import replace_placeholders
 from pprint import pprint
+import shlex
 
 
 __author__ = 'froth'
@@ -111,7 +112,8 @@ class Config:
                       assert mode == "after_files", "Currently only 'after_files' is supported"
                       self.run_periodically.append(dict(after_files=int(count), cmds = []))
                     elif opt == "cmd":
-                        parts = line_splits.pop().split(" ")
+                        # parts = line_splits.pop().split(" ")
+                        parts = shlex.split(line_splits.pop())
                         idx = len(self.run_periodically)
                         self.run_periodically[idx - 1]["cmds"].append(parts)
                     elif opt == "timing_csv":
