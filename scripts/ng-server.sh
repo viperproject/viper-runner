@@ -88,3 +88,18 @@ fi
 CMD="$JAVA_CMD $JAVA_OPTS -cp $NAILGUN_JAR:$FATJAR $NAILGUN_MAIN $PORT"
 # echo "Command: '$CMD'"
 coproc $CMD &
+
+## Wait until the server is ready.
+## Could simply wait for a fixed period, e.g. with "sleep 0.5", but that is probably 
+## rather fragile.
+
+CMD="$NAILGUN_CLIENT --nailgun-port $PORT ng-version"
+# echo "Command: '$CMD'"
+while true; do
+  sleep .1
+  output=`$CMD`
+  # echo "Output: '$output'"
+  if [[ $output =~ "NailGun server version" ]]; then
+    break
+  fi
+done
