@@ -48,7 +48,7 @@ class ResultProcessor:
 
     def writer_per_config_file(self):
         # Assemble file header
-        header = list(self.config.run_config_names)
+        header = [c.name for c in self.config.run_configurations]
         header.sort()
         header = [[name + ", runtime [s]", name + ", exit condition", name + ", timeout"] for name in header]
         # flatten
@@ -56,7 +56,7 @@ class ResultProcessor:
         header.insert(0, "input file")
         data = [header]
 
-        config_names = self.config.run_config_names
+        config_names = [c.name for c in self.config.run_configurations]
         config_names.sort()
 
         for file, cfg_dict in self.run_result.file_to_sorted_result.items():
@@ -73,14 +73,14 @@ class ResultProcessor:
             writer.write_csv_data(data)
 
     def write_avg_result_file(self):
-        header = list(self.config.run_config_names)
+        header = [c.name for c in self.config.run_configurations]
         header.sort()
         header = [name + ", average runtime [s]" for name in header]
         header.insert(0, "input file")
         data = [header]
 
         # write per config average timings csv
-        config_names = self.config.run_config_names
+        config_names = [c.name for c in self.config.run_configurations]
         config_names.sort()
 
         for file, cfg_dict in self.run_result.file_to_result_avg.items():

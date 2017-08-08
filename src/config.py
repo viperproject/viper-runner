@@ -7,6 +7,16 @@ import shlex
 
 __author__ = 'froth'
 
+class RunConfiguration:
+    def __init__(self):
+        self.name = ""
+        self.main_cmd = []
+        self.pre_round_cmds = []
+        self.post_round_cmds = []
+
+    def __repr__(self):
+        return "RunConfig(name: {}, cmd: {}, pre_round_cmds: {}, post_round_cmds: {})".format(
+            repr(self.name), repr(self.main_cmd), repr(self.pre_round_cmds), repr(self.post_round_cmds))
 
 class Config:
     """
@@ -21,8 +31,6 @@ class Config:
         self.testFolder = ""
         self.testFilesInFile = ""
         self.run_configurations = []
-        self.run_config_names = []
-        self.run_periodically = []
         self.ignoreList = []
         self.timeout = None  # seconds > 0 or None
         self.repetitions = 5
@@ -39,7 +47,7 @@ class Config:
     def print(self):
         print()
         print("Configuration:")
-        pprint(vars(self))
+        pprint(vars(self), width=80)
         print()
 
     def read_config_file(self, config_file):
@@ -50,10 +58,10 @@ class Config:
         print("Parsing configuration file...")
         try:
             with open(config_file) as configFile:
-                run_config_override = True
-                for line in [l.strip(' \r\n') for l in configFile if l.strip(' \r\n') and not l.startswith('#')]:
+                # run_config_override = True
+                for line in [l for l in [l.strip() for l in configFile] if l and not l.startswith('#')]:
                     line_splits = line.split(" ", maxsplit=1)
-                    opt = line_splits.pop(0).strip()
+                    opt = line_splits.pop(0).strip().lower()
 
                     # skip invalid option without argument.
                     if not line_splits:
@@ -65,15 +73,36 @@ class Config:
                         self.testFolder = line_splits.pop()
                     elif opt == "test_files_in_file":
                         self.testFilesInFile = line_splits.pop()                        
+                    # elif opt == "run_configuration":
+                    #     # override default run configurations
+                    #     if run_config_override:
+                    #         run_config_override = False
+                    #         self.run_configurations = []
+                    #         self.run_config_names = []
+                    #     curr_conf = [os.path.normpath(line_splits.pop())]
+                    #     self.run_configurations.append(curr_conf)
+                    #     self.run_config_names.append("run_config_" + str(len(self.run_configurations)))
                     elif opt == "run_configuration":
-                        # override default run configurations
-                        if run_config_override:
-                            run_config_override = False
-                            self.run_configurations = []
-                            self.run_config_names = []
-                        curr_conf = [os.path.normpath(line_splits.pop())]
-                        self.run_configurations.append(curr_conf)
-                        self.run_config_names.append("run_config_" + str(len(self.run_configurations)))
+                        config_name = line_splits.pop()
+                        if config_name in [c.name for c in self.run_configurations]:
+                            print("Error: Configuration name '" + config_name + "' is not unique.")
+                            exit(1)
+                        else:
+                            configuration = RunConfiguration()
+                            configuration.name = config_name
+                            self.run_configurations.append(configuration)
+                    elif opt == "cmd":
+                        parts = shlex.split(line_splits.pop())
+                        configuration = self.run_configurations[-1]
+                        configuration.main_cmd = parts
+                    elif opt == "pre_round_cmd":
+                        parts = shlex.split(line_splits.pop())
+                        configuration = self.run_configurations[-1]
+                        configuration.pre_round_cmds.append(parts)
+                    elif opt == "post_round_cmd":
+                        parts = shlex.split(line_splits.pop())
+                        configuration = self.run_configurations[-1]
+                        configuration.post_round_cmds.append(parts)
                     elif opt == "ignore":
                         # normalize path separators, so that filtering works correctly
                         self.ignoreList.append(os.path.normpath(line_splits.pop()))
@@ -93,29 +122,6 @@ class Config:
                         self.list_files = parse_bool(line_splits.pop())
                     elif opt == "check_files_accessible":
                         self.check_files_accessible = parse_bool(line_splits.pop())
-                    elif opt == "arg":
-                        # parse argument and add it to the last mentioned run_configuration.
-                        arg = line_splits.pop().split(" ", maxsplit=1)
-                        idx = len(self.run_configurations)
-                        self.run_configurations[idx - 1].extend(arg)
-                    elif opt == "config_name":
-                        # parse argument and add it to the last mentioned run_configuration.
-                        config_name = line_splits.pop()
-                        if config_name in self.run_config_names:
-                            print("Error: Configuration name '" +
-                                  config_name + "' is not unique. Default name will be kept.")
-                        else:
-                            idx = len(self.run_configurations)
-                            self.run_config_names[idx - 1] = config_name
-                    elif opt == "run_periodically":
-                      [mode, count] = [p.strip() for p in line_splits.pop().split(" ")]
-                      assert mode == "after_files", "Currently only 'after_files' is supported"
-                      self.run_periodically.append(dict(after_files=int(count), cmds = []))
-                    elif opt == "cmd":
-                        # parts = line_splits.pop().split(" ")
-                        parts = shlex.split(line_splits.pop())
-                        idx = len(self.run_periodically)
-                        self.run_periodically[idx - 1]["cmds"].append(parts)
                     elif opt == "timing_csv":
                         self.timing_csv_file_name = replace_placeholders(line_splits.pop())
                     elif opt == "avg_per_config_timing_csv":

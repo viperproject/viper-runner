@@ -38,3 +38,6 @@ def generate_path_dependent_filename(file):
         file = path
     folders.reverse()
     return "_".join(folders)
+
+def exit(exit_code):
+    sys.exit(exit_code)

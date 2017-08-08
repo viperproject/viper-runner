@@ -100,7 +100,7 @@ class Environment:
                     print("Cannot access " + file)
                     ok = False
             if not ok:
-                self.exit(1)
+                exit(1)
 
     def run_processes(self):
         """
@@ -110,28 +110,28 @@ class Environment:
         i = 1
         processed_files = 0
         for file in self.files:
-            for run_config, config_name in zip(self.config.run_configurations, self.config.run_config_names):
-                runner = ProcessRunner(run_config, file, config_name, self.config)
+            for run_config in self.config.run_configurations:
+                for pre_round_cmd in run_config.pre_round_cmds:
+                    print("Executing pre_round_cmd '{}'".format(pre_round_cmd))
+                    # Hacky!
+                    runner = ProcessRunner(pre_round_cmd, file, run_config.name, self.config)
+                    irrelevant_result = SingleRunResult(run_config.name, file)
+                    runner.run_process(pre_round_cmd, file, -1, irrelevant_result)
+
+                runner = ProcessRunner(run_config.main_cmd, file, run_config.name, self.config)
                 timings = runner.run(i, self.total_jobs)
+
                 self.results.add_results(timings)
                 i += self.config.repetitions
+
+                for post_round_cmd in run_config.post_round_cmds:
+                    print("Executing post_round_cmd '{}'".format(post_round_cmd))
+                    # Hacky!
+                    runner = ProcessRunner(post_round_cmd, file, run_config.name, self.config)
+                    irrelevant_result = SingleRunResult(run_config.name, file)
+                    runner.run_process(post_round_cmd, file, -1, irrelevant_result)
                 
             processed_files += 1
-            
-            for run_periodically in self.config.run_periodically:
-                if processed_files % run_periodically["after_files"] == 0:
-                    print("Execute periodically running command:")
-                    print("  Every {} files".format(run_periodically["after_files"]))
-                    print("  Processed {}/{} files".format(processed_files, len(self.files)))
-                    for cmd in run_periodically["cmds"]:
-                        print("  Command is {}".format(cmd))
-                        # Hacky!
-                        runner = ProcessRunner(run_config, file, config_name, self.config)
-                        irrelevant_result = SingleRunResult(config_name, file)
-                        runner.run_process(cmd, file, -1, irrelevant_result)
-                    print("")
-                    print("Executed periodically running command(s)")
-                    print("")
 
     def confirm_or_quit(self):
         if self.config.confirm_start:
@@ -139,7 +139,4 @@ class Environment:
             choice = str(getch()).upper()
             print()
             if choice == "Q":
-                self.exit(0)
-
-    def exit(self, exit_code):
-        sys.exit(exit_code)
+                exit(0)
