@@ -1,7 +1,11 @@
 #!/bin/bash
 
 SCRIPT_DIR=${0%/*} # https://stackoverflow.com/a/3588939
-PORT=$1
+PORT=2113
+
+if [ ! -z $1]; then
+    PORT=$1
+fi
 
 $SCRIPT_DIR/warmup-viper.sh \
     --repetitions 1 \
