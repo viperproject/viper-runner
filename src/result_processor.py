@@ -1,7 +1,5 @@
+import os
 from src.filewriter import FileWriter
-
-__author__ = 'froth'
-
 
 class ResultProcessor:
     """
@@ -20,13 +18,13 @@ class ResultProcessor:
         if not self.results_processed:
             self.run_result.process_timings()
 
-        if self.config.timing_csv_file_name:
+        if self.config.get('results.individual_timings', None):
             self.write_result_csv()
 
-        if self.config.per_config_timing_csv_file_name:
+        if self.config.get('results.per_config_timings', None):
             self.writer_per_config_file()
 
-        if self.config.avg_per_config_timing_csv_file_name:
+        if self.config.get('results.avg_per_config_timings', None):
             self.write_avg_result_file()
 
     def write_result_csv(self):
@@ -43,12 +41,14 @@ class ResultProcessor:
                              str(result.timeout_occurred)])
 
         # write data
-        with FileWriter(self.config.timing_csv_file_name) as writer:
+        filename = os.path.join(self.config.get('results.path'), 
+                                self.config.get('results.individual_timings'))
+        with FileWriter(filename) as writer:
             writer.write_csv_data(data)
 
     def writer_per_config_file(self):
         # Assemble file header
-        header = [c.name for c in self.config.run_configurations]
+        header = [c.get('name') for c in self.config.get('run_configurations')]
         header.sort()
         header = [[name + ", runtime [s]", name + ", exit condition", name + ", timeout"] for name in header]
         # flatten
@@ -56,11 +56,11 @@ class ResultProcessor:
         header.insert(0, "input file")
         data = [header]
 
-        config_names = [c.name for c in self.config.run_configurations]
+        config_names = [c.get('name') for c in self.config.get('run_configurations')]
         config_names.sort()
 
         for file, cfg_dict in self.run_result.file_to_sorted_result.items():
-            for i in range(0, self.config.repetitions):
+            for i in range(0, self.config.get('repetitions')):
                 values = [file]
                 for name in config_names:
                     curr_result = cfg_dict[name][i]
@@ -69,18 +69,20 @@ class ResultProcessor:
                     values.append(str(curr_result.timeout_occurred))
                 data.append(values)
 
-        with FileWriter(self.config.per_config_timing_csv_file_name) as writer:
+        filename = os.path.join(self.config.get('results.path'), 
+                                self.config.get('results.per_config_timings'))
+        with FileWriter(filename) as writer:
             writer.write_csv_data(data)
 
     def write_avg_result_file(self):
-        header = [c.name for c in self.config.run_configurations]
+        header = [c.get('name') for c in self.config.get('run_configurations')]
         header.sort()
         header = [name + ", average runtime [s]" for name in header]
         header.insert(0, "input file")
         data = [header]
 
         # write per config average timings csv
-        config_names = [c.name for c in self.config.run_configurations]
+        config_names = [c.get('name') for c in self.config.get('run_configurations')]
         config_names.sort()
 
         for file, cfg_dict in self.run_result.file_to_result_avg.items():
@@ -90,5 +92,7 @@ class ResultProcessor:
                 values.append(str(curr_result))
             data.append(values)
 
-        with FileWriter(self.config.avg_per_config_timing_csv_file_name) as writer:
+        filename = os.path.join(self.config.get('results.path'), 
+                                self.config.get('results.avg_per_config_timings'))
+        with FileWriter(filename) as writer:
             writer.write_csv_data(data)

@@ -1,8 +1,5 @@
 import os
 
-__author__ = 'froth'
-
-
 class FileWriter:
     """
     Writes the various result files of the benchmark.

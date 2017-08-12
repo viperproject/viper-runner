@@ -1,8 +1,5 @@
 from statistics import mean
 
-__author__ = 'froth'
-
-
 class RunResult:
     """
     Collection of all results for a single run configuration.
@@ -62,7 +59,8 @@ class SingleRunResult:
 
     def __init__(self, config_name, file_name):
         self.config_name = config_name
-        self.time_elapsed = -1
         self.input_file = file_name
-        self.timeout_occurred = False
-        self.return_code = 0
+
+        self.timeout_occurred = None
+        self.return_code = None
+        self.time_elapsed = None
