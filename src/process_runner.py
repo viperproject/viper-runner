@@ -7,54 +7,62 @@ import psutil
 from src.util import replace_placeholders
 from src.result import SingleRunResult
 
-__author__ = 'froth'
-
+class ProcessRunnerResult:
+    def __init__(self):
+        self.timeout_occurred = None
+        self.return_code = None
+        self.time_elapsed = None
 
 class ProcessRunner:
-    """
-    Runs a benchmark including repetitions.
-    """
+    @staticmethod
+    def run_as_benchmark(command, file, config_name, next_job, total_jobs, repetitions, timeout, stdout_fh, stderr_fh):
+        run_results = []
 
-    def __init__(self, cmd, file, config_name, config):
-        self.command = list(cmd)
-        self.command.append(file)
-        self.config = config
-        self.file = file
-        self.config_name = config_name
+        for i in range(0, repetitions):
+            # Replace placeholders in command
+            concrete_command = \
+                [replace_placeholders(part, file=file, repetition=i, config_name=config_name)
+                 for part in command]
 
-    def run(self, n_run, total):
-        results = []
-        for i in range(0, self.config.repetitions):
-            # replace placeholders in command
-            concrete_command = [replace_placeholders(cmd, file=self.file, repetition=i, config_name=self.config_name)
-                                for cmd in self.command]
-
+            # Print information about next repetition
             print(datetime.datetime.now().strftime("%d.%m.%Y, %H:%M:%S") +
-                  ": running job " + str(n_run + i) +
-                  " of " + str(total) + ", repetition " +
-                  str(i + 1) + " of " + str(self.config.repetitions) + "...")
+                  ": running job " + str(next_job + i) +
+                  " of " + str(total_jobs) + ", repetition " +
+                  str(i + 1) + " of " + str(repetitions) + "...")
             print("Command: '" + " ".join(concrete_command))
 
-            curr_result = SingleRunResult(self.config_name, self.file)
-            self.run_process(concrete_command, self.file, i, curr_result)
+            # Run command to benchmark
+            process_result = ProcessRunner.run(concrete_command, timeout, stdout_fh, stderr_fh)
 
-            results.append(curr_result)
-            print()
-            print("Time elapsed: " + "{:.3f}".format(curr_result.time_elapsed) + " seconds")
-            print()
-        return results
+            # Create and initialize a run result, and append it to the list of recorded run results
+            run_result = SingleRunResult(config_name, file)
 
-    def run_process(self, cmd, file, repetition, result):
-        stdout_output, stderr_output = self.get_process_output(file, repetition)
+            run_result.timeout_occurred = process_result.timeout_occurred
+            run_result.return_code = process_result.return_code
+            run_result.time_elapsed = process_result.time_elapsed
+
+            run_results.append(run_result)
+
+            print()
+            print("Time elapsed: " + "{:.3f}".format(run_result.time_elapsed) + " seconds")
+            print()
+
+        return run_results
+
+    @staticmethod
+    def run(command, timeout, stdout_fh, stderr_fh):
+        return_code = -1
+        timeout_occurred = False
+        start_time = time.perf_counter()
         
-        # run the actual process
-        start = time.perf_counter()
-        process = subprocess.Popen(cmd, stdout=stdout_output, stderr=stderr_output)
+        # Run the actual process
+        process = subprocess.Popen(command, stdout=stdout_fh, stderr=stderr_fh)
         try:
-            result.return_code = process.wait(timeout=self.config.timeout)
+            return_code = process.wait(timeout=timeout)
         except subprocess.TimeoutExpired:
-            result.timeout_occurred = True
-            # kill process and all its children
+            timeout_occurred = True
+            
+            # Kill process and all its children
             try:
                 parent = psutil.Process(process.pid)
                 for child in parent.children(recursive=True):
@@ -62,50 +70,17 @@ class ProcessRunner:
                 parent.kill()
                 print("Process was killed due to timeout!")
             except psutil.NoSuchProcess:
-                # ignore this exception. This just means that this process barely made it.
+                # Ignore this exception: it just means that the process barely made it
                 pass
             except psutil.AccessDenied:
-                # ignore this exception.
+                # Ignore this exception
                 pass
         finally:
-            end = time.perf_counter()
+            end_time = time.perf_counter()
 
-            # close files again, if they were opened
-            if self.config.stdout_file_name and stdout_output != None:
-                stdout_output.close()
-            if self.config.stderr_file_name and stderr_output != None:
-                stderr_output.close()
-        result.time_elapsed = end-start
+        process_result = ProcessRunnerResult()
+        process_result.return_code = return_code
+        process_result.timeout_occurred = timeout_occurred
+        process_result.time_elapsed = end_time - start_time
 
-    def get_process_output(self, file, repetition):
-        # generate file names for output files.
-        curr_stdout_file_name = replace_placeholders(self.config.stdout_file_name,
-                                                     file=file,
-                                                     repetition=repetition,
-                                                     config_name=self.config_name)
-        curr_stderr_file_name = replace_placeholders(self.config.stderr_file_name,
-                                                     file=file,
-                                                     repetition=repetition,
-                                                     config_name=self.config_name)
-        if self.config.print_output:
-            stdout_output = None
-            stderr_output = None
-        else:
-            stdout_output = subprocess.DEVNULL
-            stderr_output = subprocess.DEVNULL
-        try:
-            # generate files / folders, if not existing
-            if curr_stdout_file_name:
-                if not os.path.exists(os.path.dirname(curr_stdout_file_name)):
-                    os.makedirs(os.path.dirname(curr_stdout_file_name))
-                stdout_output = open(curr_stdout_file_name, "w+")
-
-            if curr_stderr_file_name:
-                if not os.path.exists(os.path.dirname(curr_stderr_file_name)):
-                    os.makedirs(os.path.dirname(curr_stderr_file_name))
-                stderr_output = open(curr_stderr_file_name, "w+")
-        except IOError as err:
-            print("Unable to open output file. Aborting.")
-            print(err)
-            exit(-1)
-        return stdout_output, stderr_output
+        return process_result
