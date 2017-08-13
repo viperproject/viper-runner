@@ -182,7 +182,7 @@ class Environment:
     def _confirm_or_quit(self):
         if self.config.get('confirm_start'):
             print("\nPress Q to quit, any other key to continue ...")
-            choice = str(getch(), encoding="utf-8").upper()
+            choice = getch().upper()
             print()
             if choice == "Q":
                 abort(0)
